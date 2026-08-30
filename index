@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Website của tôi</title>
+
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: Arial, sans-serif;
+            background: #111;
+            color: white;
+            min-height: 100vh;
+
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .container {
+            text-align: center;
+        }
+
+        h1 {
+            font-size: 50px;
+            margin-bottom: 15px;
+        }
+
+        p {
+            color: #aaa;
+            font-size: 18px;
+        }
+
+        button {
+            margin-top: 25px;
+            padding: 12px 30px;
+
+            border: none;
+            border-radius: 8px;
+
+            background: #e50914;
+            color: white;
+
+            font-size: 16px;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background: #ff1f2d;
+        }
+    </style>
+</head>
+
+<body>
+
+<div class="container">
+    <h1>NGUYỄN THÀNH LỘC</h1>
+
+    <p>Welcome to my website</p>
+
+    <button onclick="alert('Xin chào!')">
+        Khám phá
+    </button>
+</div>
+
+</body>
+</html>
