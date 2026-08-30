@@ -3963,17 +3963,6 @@
             'gemini-3.5-flash-lite';
 
 
-        /* =========================================================
-           AI QUOTA PROTECTION
-
-           Mục tiêu: hạn chế tối đa request Gemini.
-           - Cache audit trên thiết bị 24 giờ
-           - Cache chat giống hệt câu hỏi 1 giờ
-           - Circuit breaker khi gặp 429/401/403/503
-           - Không tự retry khi quota/overload
-           - Không gọi AI cho các finding chỉ mang tính privacy
-        ========================================================= */
-
         const AI_AUDIT_CACHE_TTL =
             24 * 60 * 60 * 1000;
 
@@ -9601,12 +9590,6 @@
             ) {
                 return true;
             }
-
-            /*
-             * Canvas / Audio / WebGL / locale / network chỉ là
-             * privacy/performance telemetry; không gọi Gemini chỉ
-             * vì các finding này tồn tại.
-             */
             return false;
         }
 
@@ -9628,9 +9611,6 @@
                     dataset
                 );
 
-            /* =====================================================
-               1. CACHE TRÊN THIẾT BỊ
-               ===================================================== */
 
             const cacheKey =
                 AI_AUDIT_CACHE_PREFIX +
@@ -9651,7 +9631,7 @@
                 );
 
                 terminalLog(
-                    '> [AI] Dùng báo cáo Audit từ cache thiết bị; 0 Gemini request.'
+                    '> [AI] Dùng báo cáo Audit từ cache thiết bị; 0 LowLee AI request.'
                 );
 
                 showTab('aireport');
@@ -9659,9 +9639,6 @@
                 return localCache.text;
             }
 
-            /* =====================================================
-               2. CHỈ GỌI GEMINI KHI CÓ TÍN HIỆU ĐÁNG PHÂN TÍCH
-               ===================================================== */
 
             if (
                 !shouldUseRemoteAI(
@@ -9682,20 +9659,13 @@
                     local.risk_level;
 
                 terminalLog(
-                    '> [AI] Không gọi Gemini: finding hiện tại chỉ là privacy/performance telemetry.'
+                    '> [AI] LowLee AI đang bận rộn: finding hiện tại chỉ là privacy/performance telemetry.'
                 );
 
                 showTab('aireport');
 
                 return JSON.stringify(local);
             }
-
-            /* =====================================================
-               3. GLOBAL CLIENT COOLDOWN CHO AUDIT
-
-               Một trình duyệt không được tạo quá nhiều audit AI
-               trong thời gian ngắn, kể cả khi kết quả scan thay đổi.
-               ===================================================== */
 
             const lastRemoteAudit =
                 storageGetJson(
@@ -9721,21 +9691,16 @@
                     'LOCAL FALLBACK';
 
                 aiRiskSummary.textContent =
-                    'Đã có một AI audit gần đây; không tạo thêm request Gemini để bảo vệ quota.';
+                    'Low Lee AI đang bận, vui lòng đợi trong giây lát';
 
                 terminalLog(
-                    '> [AI] Cooldown 30 phút: không gửi Gemini.'
+                    '> [AI] Low Lee đang ăn cơm, vui lòng chờ 30p sau thử lại.'
                 );
 
                 showTab('aireport');
 
                 return JSON.stringify(local);
             }
-
-            /* =====================================================
-               4. CIRCUIT BREAKER
-               ===================================================== */
-
             const circuit =
                 getAICircuitState();
 
@@ -9756,7 +9721,7 @@
                     'LowLee AI đang tạm dừng request để bảo vệ quota.';
 
                 terminalLog(
-                    `> [AI] Circuit breaker: ${circuit.reason}. Không gửi Gemini.`
+                    `> [AI] Circuit breaker: ${circuit.reason}. Không gửi LowLee AI.`
                 );
 
                 showTab('aireport');
@@ -9934,7 +9899,7 @@
 
                 terminalLog(
                     payload?.cached
-                        ? '> [AI] Dùng cache server; không gọi Gemini.'
+                        ? '> [AI] LowLee AI ON/OFF'
                         : '> [AI] LowLee AI đã hoàn tất phân tích.'
                 );
 
@@ -10009,7 +9974,7 @@
                     'LOCAL FALLBACK';
 
                 aiRiskSummary.textContent =
-                    'Gemini tạm thời không khả dụng; hiển thị kết quả rule-based.';
+                    'Low Lee AI tạm thời không khả dụng; hiển thị kết quả rule-based.';
 
                 aiReportContent.textContent +=
                     `\n\nChi tiết kỹ thuật: ${message}`;
@@ -10314,7 +10279,7 @@
                     AI_CHAT_CACHE_TTL
             ) {
                 terminalLog(
-                    '> [AI] Dùng câu trả lời Chat từ cache thiết bị; 0 Gemini request.'
+                    '> [AI] Dùng câu trả lời Chat từ cache thiết bị; 0 LOWLEE AI request.'
                 );
 
                 return cached.text;
@@ -10348,7 +10313,7 @@
             if (
                 rate.count >= 3
             ) {
-                return 'Bạn đã đạt giới hạn 3 câu hỏi/phút để bảo vệ quota Gemini. Vui lòng thử lại sau.';
+                return 'Bạn đã đạt giới hạn 3 câu hỏi/phút hãy để LowLee AI được nghỉ ngơi. Vui lòng thử lại sau.';
             }
 
             rate.count++;
