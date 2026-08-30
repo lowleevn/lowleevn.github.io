@@ -3951,17 +3951,14 @@
 
     <script>
         'use strict';
-//key_lowlee
-        const GEMINI_API_KEY =
-            "AQ.Ab8RN6LlrG4hIqbLqJ9nOBJMGmDhwaeZsA-xYWYGdtS0pOpk1Q";
+        /* =========================================================
+           LOWLEE AI PROXY
+           API key KHÔNG được đặt trong HTML.
 
-
-        const GEMINI_MODEL =
-            'gemini-3.7-flash';
-
-
-        const GEMINI_ENDPOINT =
-            `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent`;
+           Sau khi deploy Cloudflare Worker, sửa DUY NHẤT URL bên dưới.
+        ========================================================= */
+        const LOWLEE_AI_PROXY =
+            'https://purple-bird-b27d.lochungyenn2002.workers.dev';
 
 
         /* =========================================================
@@ -9062,411 +9059,155 @@
                 );
         }
 
-        async function runGeminiSecurityAnalysis(
-            telemetry,
-            findings
-        ) {
+        function buildCompactAIData(telemetry, findings) {
 
-            resetAIReport();
+            const t = telemetry || {};
+            const n = t.network || {};
+            const w = t.webRTC || {};
+            const p = t.privacy || {};
+            const hw = t.hardware || {};
+            const env = t.environment || {};
+            const conn = t.connection || {};
+            const fp = t.fingerprints || {};
+            const ip = t.ipSecurity || {};
 
-
-            if (
-                !GEMINI_API_KEY
-            ) {
-
-                aiRiskBadge.textContent =
-                    'THIẾU API KEY';
-
-
-                aiRiskSummary.textContent =
-                    'Không có LowLee API key.';
-
-
-                return null;
-            }
-
-             
-            const safeTelemetry = {
-
-                environment:
-                    telemetry.environment,
-
-                hardware:
-                    telemetry.hardware,
-
-                connection:
-                    telemetry.connection,
-
-                network:
-                    telemetry.network,
-
-                webRTC:
-                    telemetry.webRTC,
-
-                fingerprints: {
-
-                    canvas:
-                        telemetry.fingerprints.canvas,
-
-                    audio:
-                        telemetry.fingerprints.audio,
-
-                    webGL:
-                        telemetry.fingerprints.webGL,
-
-                    webGPU:
-                        telemetry.fingerprints.webGPU
+            return {
+                environment: {
+                    https: Boolean(env.https),
+                    secureContext: Boolean(env.secureContext),
+                    online: Boolean(env.online),
+                    userAgent: String(env.userAgent || '').slice(0, 220)
                 },
-
-                permissions:
-                    telemetry.permissions,
-
-                storage:
-                    telemetry.storage,
-
-                serviceWorker:
-                    telemetry.serviceWorker,
-
-                mediaDevices:
-                    telemetry.mediaDevices,
-
-                notification:
-                    telemetry.notification,
-
-                privacy:
-                    telemetry.privacy,
-
-                apiSupport:
-                    telemetry.apiSupport,
-
+                hardware: {
+                    platform: String(hw.platform || '').slice(0, 80),
+                    cores: Number(hw.cores || 0),
+                    memoryGB: Number(hw.memoryGB || 0),
+                    touchPoints: Number(hw.touchPoints || 0),
+                    screen: String(hw.screen || '').slice(0, 50)
+                },
+                connection: {
+                    type: String(conn.type || '').slice(0, 40),
+                    effectiveType: String(conn.effectiveType || '').slice(0, 20),
+                    downlink: Number(conn.downlink || 0),
+                    rtt: Number(conn.rtt || 0),
+                    saveData: Boolean(conn.saveData)
+                },
+                network: {
+                    measuredDownloadMbps: Number(n.measuredDownloadMbps || 0),
+                    measuredUploadMbps: Number(n.measuredUploadMbps || 0),
+                    pingMs: Number(n.pingMs || 0),
+                    jitterMs: Number(n.jitterMs || 0),
+                    failureRate: Number(n.failureRate || 0),
+                    downloadTestAvailable: Boolean(n.downloadTestAvailable),
+                    uploadTestAvailable: Boolean(n.uploadTestAvailable)
+                },
+                webRTC: {
+                    supported: Boolean(w.supported),
+                    hostCandidateDetected: Boolean(w.hostCandidateDetected)
+                },
+                fingerprints: {
+                    canvas: Boolean(fp.canvas),
+                    audio: Boolean(fp.audio),
+                    webGL: Boolean(fp.webGL?.supported),
+                    webGPU: Boolean(fp.webGPU?.supported)
+                },
+                privacy: {
+                    doNotTrack: String(p.doNotTrack || '').slice(0, 20),
+                    globalPrivacyControl: Boolean(p.globalPrivacyControl)
+                },
                 ipSecurity: {
-
-                    country:
-                        telemetry.ipSecurity.country,
-
-                    countryCode:
-                        telemetry.ipSecurity.countryCode,
-
-                    city:
-                        telemetry.ipSecurity.city,
-
-                    isp:
-                        telemetry.ipSecurity.isp,
-
-                    vpn:
-                        telemetry.ipSecurity.vpn,
-
-                    proxy:
-                        telemetry.ipSecurity.proxy,
-
-                    tor:
-                        telemetry.ipSecurity.tor
-                }
+                    country: String(ip.country || '').slice(0, 60),
+                    countryCode: String(ip.countryCode || '').slice(0, 10),
+                    vpn: Boolean(ip.vpn),
+                    proxy: Boolean(ip.proxy),
+                    tor: Boolean(ip.tor)
+                },
+                findings: Array.isArray(findings)
+                    ? findings.slice(0, 20).map(f => ({
+                        id: String(f?.id || '').slice(0, 60),
+                        title: String(f?.title || '').slice(0, 180),
+                        type: String(f?.type || '').slice(0, 30),
+                        badge: String(f?.badge || '').slice(0, 60),
+                        detail: String(f?.detail || '').slice(0, 500),
+                        remediation: String(f?.remediation || '').slice(0, 500)
+                    }))
+                    : []
             };
-
-
-            const dataset = {
-
-                telemetry:
-                    safeTelemetry,
-
-                findings:
-                    findings
-            };
-
-
-            const prompt = `
-Bạn là LOW LEE AI SECURITY ANALYST.
-
-Hãy phân tích dữ liệu kiểm tra trình duyệt, thiết bị,
-quyền riêng tư và hiệu năng mạng bên dưới.
-
-MỤC TIÊU:
-
-1. Chấm điểm RISK_SCORE từ 0 đến 100.
-2. Phân loại:
-   AN TOÀN
-   THẤP
-   TRUNG BÌNH
-   CAO
-   NGHIÊM TRỌNG
-
-3. Phân tích riêng:
-   - Security
-   - Privacy
-   - Network
-   - Device
-
-4. Xác định những vấn đề đáng quan tâm nhất.
-
-5. Phân biệt rõ:
-   - browser API tồn tại
-   - feature capability
-   - attack surface
-   - privacy exposure
-   - configuration issue
-   - evidence of compromise
-
-6. Không được kết luận máy đã bị hack,
-   nhiễm malware, keylogger, rootkit hoặc bị
-   tấn công thành công nếu dữ liệu không chứng minh.
-
-7. Nếu scanner đánh giá quá nghiêm trọng,
-   hãy tự sửa lại kết luận.
-
-8. Đánh giá NETWORK:
-   - Download thực tế
-   - Upload thực tế
-   - Ping
-   - Jitter
-   - Failure rate
-   - Connection type
-   - Effective type
-   - Browser downlink
-   - Browser RTT
-   - Save Data
-
-9. Khi đánh giá network:
-   - Ping là HTTP/application latency,
-     không phải ICMP ping.
-   - Failure rate không phải packet loss ICMP.
-   - Browser downlink là estimate.
-   - Speed test phụ thuộc server test và route.
-   - Không gọi mạng chậm là "lỗ hổng bảo mật".
-
-10. Đưa cách khắc phục cụ thể.
-
-11. Xếp cách khắc phục theo mức ưu tiên.
-
-12. Nêu giới hạn của bài kiểm tra.
-
-13. Không bịa dữ liệu.
-
-14. Không hướng dẫn tấn công trái phép.
-
-CÁC ĐIỀU KHÔNG ĐƯỢC SUY DIỄN:
-
-- WebRTC tồn tại không đồng nghĩa VPN bị bypass.
-- WebAssembly tồn tại không đồng nghĩa malware.
-- WebGL/WebGPU tồn tại không đồng nghĩa GPU bị hack.
-- LocalStorage tồn tại không đồng nghĩa token bị đánh cắp.
-- Camera/Microphone API tồn tại không đồng nghĩa camera/micro đang bị theo dõi.
-- navigator.webdriver=true không nhất thiết là tấn công.
-- Service Worker hợp lệ không phải malware.
-- Fingerprint exposure chủ yếu là privacy issue.
-
-TRẢ VỀ JSON HỢP LỆ:
-
-{
-  "risk_score": 0,
-  "risk_level": "AN TOÀN",
-  "summary": "Kết luận tổng thể.",
-  "top_issues": [
-    "Vấn đề 1",
-    "Vấn đề 2",
-    "Vấn đề 3"
-  ],
-  "security_analysis": "Phân tích security.",
-  "privacy_analysis": "Phân tích privacy.",
-  "network_analysis": "Phân tích download, upload, ping, jitter, stability.",
-  "device_analysis": "Phân tích thiết bị và browser.",
-  "actions": [
-    "Cách khắc phục ưu tiên 1",
-    "Cách khắc phục ưu tiên 2",
-    "Cách khắc phục ưu tiên 3",
-    "Cách khắc phục ưu tiên 4"
-  ],
-  "limitations": "Giới hạn của scanner."
-}
-
-DỮ LIỆU:
-
-${JSON.stringify(
-    dataset,
-    null,
-    2
-)}
-`;
-
-
-            try {
-
-                terminalLog(
-                    '> [AI] Đang gửi Security + Privacy + Device + Network cho LowLee AI...'
-                );
-
-
-                const requestBody = {
-
-                    systemInstruction: {
-
-                        parts: [
-
-                            {
-                                text:
-                                    'Bạn là Low Lee AI Security Analyst. Phân tích chính xác dữ liệu được cung cấp. Không bịa bằng chứng. Không biến browser API capability thành bằng chứng compromise.'
-                            }
-
-                        ]
-
-                    },
-
-
-                    contents: [
-
-                        {
-
-                            role:
-                                'user',
-
-                            parts: [
-
-                                {
-                                    text:
-                                        prompt
-                                }
-
-                            ]
-
-                        }
-
-                    ],
-
-
-                    generationConfig: {
-
-                        responseMimeType:
-                            'application/json',
-
-                        thinkingConfig: {
-
-                            thinkingLevel:
-                                'medium'
-                        },
-
-                        maxOutputTokens:
-                            5000
-                    }
-
-                };
-
-
-                const response =
-                    await fetch(
-                        GEMINI_ENDPOINT,
-                        {
-
-                            method:
-                                'POST',
-
-                            headers: {
-
-                                'Content-Type':
-                                    'application/json',
-
-                                'x-goog-api-key':
-                                    GEMINI_API_KEY
-
-                            },
-
-                            body:
-                                JSON.stringify(
-                                    requestBody
-                                )
-
-                        }
-                    );
-
-
-                const data =
-                    await response.json();
-
-
-                if (
-                    !response.ok ||
-                    data.error
-                ) {
-
-                    throw new Error(
-                        data?.error?.message ||
-                        `HTTP ${response.status}`
-                    );
-                }
-
-
-                const text =
-                    data
-                        ?.candidates?.[0]
-                        ?.content
-                        ?.parts
-                        ?.[0]
-                        ?.text;
-
-
-                if (
-                    !text
-                ) {
-
-                    throw new Error(
-                        'LowLee AI không trả về nội dung.'
-                    );
-                }
-
-
-                displayAIReport(
-                    text
-                );
-
-
-                terminalLog(
-                    '> [AI] LowLee AI đã hoàn tất phân tích.'
-                );
-
-                showTab(
-                    'aireport'
-                );
-
-
-                return text;
-
-            } catch (error) {
-
-                console.error(
-                    'LowLee AI Analysis Error:',
-                    error
-                );
-
-
-                aiRiskBadge.textContent =
-                    'LỖI AI';
-
-
-                aiRiskScore.textContent =
-                    '--/100';
-
-
-                aiRiskSummary.textContent =
-                    'Không thể hoàn thành phân tích LowLee AI.';
-
-
-                aiReportContent.textContent =
-                    `Chi tiết lỗi: ${error.message}`;
-
-
-                terminalLog(
-                    `> [AI] ERROR: ${error.message}`
-                );
-
-
-                showTab(
-                    'aireport'
-                );
-
-
-                return null;
-            }
         }
 
+        function buildLocalAIReport(findings) {
+            const items = Array.isArray(findings) ? findings : [];
+            const serious = items.filter(f =>
+                ['danger', 'warning'].includes(String(f?.type || '').toLowerCase())
+            );
+            const risk = Math.min(100, serious.length * 12);
+            const level = risk >= 60 ? 'CAO' : risk >= 30 ? 'TRUNG BÌNH' : risk > 0 ? 'THẤP' : 'AN TOÀN';
+
+            return {
+                risk_score: risk,
+                risk_level: level,
+                summary: serious.length
+                    ? `Scanner phát hiện ${serious.length} mục cần xem xét. Đây là đánh giá rule-based, không phải bằng chứng máy đã bị xâm nhập.`
+                    : 'Scanner không phát hiện tín hiệu đáng chú ý. Đây là đánh giá rule-based và không chứng minh tuyệt đối rằng thiết bị an toàn.',
+                top_issues: serious.slice(0, 3).map(f => f.detail || f.title),
+                security_analysis: 'Phân tích AI tạm thời không khả dụng; kết quả này dựa trên các rule của scanner.',
+                privacy_analysis: 'Hãy xem các finding liên quan đến fingerprint, WebRTC và privacy trong báo cáo scanner.',
+                network_analysis: 'Các chỉ số mạng được đo từ trình duyệt; chúng không tự động là lỗ hổng bảo mật.',
+                device_analysis: 'Thiết bị và browser được đánh giá bằng capability có thể quan sát từ trình duyệt.',
+                actions: serious.slice(0, 4).map(f => f.remediation).filter(Boolean),
+                limitations: 'Scanner chạy trong sandbox của trình duyệt và không thể chứng minh malware, rootkit hoặc compromise thành công chỉ từ các capability này.'
+            };
+        }
+
+        async function runGeminiSecurityAnalysis(telemetry, findings) {
+            resetAIReport();
+
+            const dataset = buildCompactAIData(telemetry, findings);
+            const serious = Array.isArray(findings)
+                ? findings.some(f => ['danger', 'warning'].includes(String(f?.type || '').toLowerCase()))
+                : false;
+
+            if (!serious) {
+                const local = buildLocalAIReport(findings);
+                displayAIReport(JSON.stringify(local));
+                terminalLog('> [AI] Không gọi Gemini: kết quả có thể xử lý local.');
+                showTab('aireport');
+                return JSON.stringify(local);
+            }
+
+            if (!LOWLEE_AI_PROXY || LOWLEE_AI_PROXY.includes('YOUR-WORKER-NAME')) {
+                const local = buildLocalAIReport(findings);
+                displayAIReport(JSON.stringify(local));
+                terminalLog('> [AI] Chưa cấu hình Cloudflare Worker; dùng fallback local.');
+                showTab('aireport');
+                return JSON.stringify(local);
+            }
+
+            try {
+                terminalLog('> [AI] Gửi dữ liệu đã rút gọn tới LowLee AI Proxy...');
+                const response = await fetch(`${LOWLEE_AI_PROXY}/v1/audit`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(dataset)
+                });
+                const data = await response.json().catch(() => ({}));
+                if (!response.ok) throw new Error(data?.error || `HTTP ${response.status}`);
+                const text = data?.data || data?.text || data?.fallback;
+                if (!text) throw new Error('Proxy không trả về báo cáo AI.');
+                displayAIReport(typeof text === 'string' ? text : JSON.stringify(text));
+                terminalLog(data?.cached ? '> [AI] Dùng báo cáo từ cache; không gọi Gemini.' : '> [AI] LowLee AI đã hoàn tất phân tích.');
+                showTab('aireport');
+                return typeof text === 'string' ? text : JSON.stringify(text);
+            } catch (error) {
+                console.error('LowLee AI Analysis Error:', error);
+                const local = buildLocalAIReport(findings);
+                displayAIReport(JSON.stringify(local));
+                aiRiskBadge.textContent = 'LOCAL FALLBACK';
+                terminalLog(`> [AI] Fallback local: ${error.message}`);
+                showTab('aireport');
+                return JSON.stringify(local);
+            }
+        }
 
         /* =========================================================
            FULL AUDIT
@@ -9704,123 +9445,26 @@ ${JSON.stringify(
         }
 
 
-        async function askGemini(
-            question
-        ) {
-
-            if (
-                !GEMINI_API_KEY
-            ) {
-
-                return (
-                    'Chưa cấu hình LowLee API Key.'
-                );
+        async function askGemini(question) {
+            const cleanQuestion = String(question || '').trim().slice(0, 700);
+            if (!cleanQuestion) return 'Vui lòng nhập câu hỏi.';
+            if (!LOWLEE_AI_PROXY || LOWLEE_AI_PROXY.includes('YOUR-WORKER-NAME')) {
+                return 'LowLee AI Proxy chưa được cấu hình.';
             }
-
-
-            const requestBody = {
-
-                systemInstruction: {
-
-                    parts: [
-
-                        {
-
-                            text:
-                                'Bạn là Low Lee AI, chuyên gia an ninh mạng. Chỉ tư vấn về bảo mật, privacy, browser security, network security và an toàn thông tin. Không bịa dữ liệu và không hướng dẫn tấn công trái phép.'
-                        }
-
-                    ]
-
-                },
-
-
-                contents: [
-
-                    {
-
-                        role:
-                            'user',
-
-                        parts: [
-
-                            {
-                                text:
-                                    question
-                            }
-
-                        ]
-
-                    }
-
-                ]
-
-            };
-
-
             try {
-
-                const response =
-                    await fetch(
-                        GEMINI_ENDPOINT,
-                        {
-
-                            method:
-                                'POST',
-
-                            headers: {
-
-                                'Content-Type':
-                                    'application/json',
-
-                                'x-goog-api-key':
-                                    GEMINI_API_KEY
-
-                            },
-
-                            body:
-                                JSON.stringify(
-                                    requestBody
-                                )
-
-                        }
-                    );
-
-
-                const data =
-                    await response.json();
-
-
-                if (
-                    !response.ok ||
-                    data.error
-                ) {
-
-                    return (
-                        `Lỗi API (${data?.error?.code || response.status}): ${data?.error?.message || 'Không xác định'}`
-                    );
+                const response = await fetch(`${LOWLEE_AI_PROXY}/v1/chat`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ question: cleanQuestion })
+                });
+                const data = await response.json().catch(() => ({}));
+                if (!response.ok) {
+                    return `Lỗi AI (${response.status}): ${data?.error || 'Không xác định'}`;
                 }
-
-
-                return (
-                    data
-                        ?.candidates?.[0]
-                        ?.content?.parts?.[0]
-                        ?.text ||
-                    'Không nhận được phản hồi từ LowLee AI.'
-                );
-
+                return data?.data || data?.text || 'Không nhận được phản hồi từ LowLee AI.';
             } catch (error) {
-
-                console.error(
-                    'Gemini Chat Error:',
-                    error
-                );
-
-
-                return (
-                    'Đã xảy ra lỗi kết nối tới Low Lee AI.'
-                );
+                console.error('LowLee AI Chat Error:', error);
+                return 'Không thể kết nối tới LowLee AI Proxy.';
             }
         }
 
