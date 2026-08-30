@@ -785,7 +785,6 @@
     </audio>
 
     <script>
-        // Matrix Background
         const canvas = document.getElementById('matrixCanvas');
         const ctx = canvas.getContext('2d');
         function resizeCanvas() {
@@ -817,15 +816,12 @@
         }
         setInterval(drawMatrix, 35);
 
-        // Spotlight Effect
         const card = document.getElementById('card');
         card.addEventListener('mousemove', (e) => {
             const rect = card.getBoundingClientRect();
             card.style.setProperty('--mouse-x', `${e.clientX - rect.left}px`);
             card.style.setProperty('--mouse-y', `${e.clientY - rect.top}px`);
         });
-
-        // Audio Management
         const audio = document.getElementById('bgm');
         const popup = document.getElementById('popup');
         const btnAccept = document.getElementById('btnAccept');
@@ -875,8 +871,6 @@
                 osc.stop(actx.currentTime + duration);
             } catch (e) {}
         }
-
-        // Like Button
         const btnLike = document.getElementById('btnLike');
         const likeCount = document.getElementById('likeCount');
         let liked = false;
@@ -892,8 +886,6 @@
                 liked = false;
             }
         });
-
-        // FPS & Device Monitor
         let frameCount = 0;
         let lastTime = performance.now();
         const fpsVal = document.getElementById('fps-val');
@@ -918,8 +910,6 @@
                 bat.addEventListener('levelchange', updateBat);
             });
         }
-
-        // Location System (GPS -> IP Fallback)
         async function initLocation() {
             const locVal = document.getElementById('loc-val');
             locVal.textContent = "Đang định vị...";
@@ -949,10 +939,8 @@
                 }
             } catch (e) {}
 
-            locVal.textContent = "Hà Nội, VN";
+            locVal.textContent = "VN";
         }
-
-        // Security Diagnostics Helpers
         function getCanvasFingerprint() {
             try {
                 const cvs = document.createElement('canvas');
@@ -1138,8 +1126,6 @@
 
             return auditData;
         }
-
-        // Modal Execution
         const skullBtn = document.getElementById('skullBtn');
         const auditModal = document.getElementById('auditModal');
         const closeAudit = document.getElementById('closeAudit');
@@ -1188,8 +1174,6 @@
         closeAudit.addEventListener('click', () => {
             auditModal.style.display = 'none';
         });
-
-        // Tabs Switching
         const tabResults = document.getElementById('tabResults');
         const tabAi = document.getElementById('tabAi');
         const resultsView = document.getElementById('resultsView');
@@ -1208,9 +1192,7 @@
             resultsView.style.display = 'none';
             aiPanel.style.display = 'flex';
         });
-
-        // ================= INTEGRATED GOOGLE GEMINI API ENGINE =================
-        const GEMINI_API_KEY = "AQ.Ab8RN6JolN3UJpl0I5DvjHJM56sXzF-7LQ0cdDGcAtqB3E58QA"; 
+        const GEMINI_API_KEY = "AQ.Ab8RN6LqwgXmmOXUT8efN9l76sUav0M6O1HlAQo0lTcQRewjDQ"; 
 
         const aiMessages = document.getElementById('aiMessages');
         const aiInput = document.getElementById('aiInput');
@@ -1229,9 +1211,8 @@
                 return "LỖI CHƯA CẤU HÌNH API KEY:\nVui lòng kiểm tra lại API Key.";
             }
 
-            const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/gemini-3.6-flash:generateContent?key=${GEMINI_API_KEY}`;
+            const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/gemini-3.5-flash-lite:generateContent?key=${GEMINI_API_KEY}`;
             
-            // System Instruction ép phạm vi hỗ trợ riêng mảng an toàn thông tin
             const payload = {
                 system_instruction: {
                     parts: [{
@@ -1274,13 +1255,9 @@
 
             appendMessage(text, 'user');
             aiInput.value = '';
-
-            // Hiển thị trạng thái chờ
             appendMessage("Đang truy vấn Low Lee AI Cyber...", 'bot');
 
             const reply = await fetchGeminiResponse(text);
-            
-            // Thay thế dòng trạng thái chờ bằng kết quả trả về
             aiMessages.lastElementChild.remove();
             appendMessage(reply, 'bot');
             playHackerBeep(1200, 0.05);
