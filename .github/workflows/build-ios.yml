@@ -1,7 +1,7 @@
 name: Build iOS IPA
 
 on:
-  workflow_dispatch: # Cho phép bấm nút chạy thủ công trên điện thoại
+  workflow_dispatch:
 
 jobs:
   build:
@@ -12,12 +12,13 @@ jobs:
         uses: actions/checkout@v3
 
       - name: Setup Node.js
-        uses: actions/checkout@v3
+        uses: actions/setup-node@v3
         with:
-          node-python: '18'
+          node-version: '18'
 
-      - name: Install Capacitor & Build App
+      - name: Install Capacitor & Sync
         run: |
+          npm init -y
           npm install @capacitor/core @capacitor/cli @capacitor/ios
           npx cap init "MyWebApp" "com.mycompany.app" --web-dir .
           npx cap add ios
@@ -27,8 +28,8 @@ jobs:
         run: |
           cd ios/App
           xcodebuild -workspace App.xcworkspace -scheme App -sdk iphoneos -configuration Release archive -archivePath build/App.xcarchive CODE_SIGNING_ALLOWED=NO
-          
-      - name: Package IPA (Unsigned)
+
+      - name: Package IPA
         run: |
           mkdir -p Payload
           cp -r ios/App/build/App.xcarchive/Products/Applications/App.app Payload/
