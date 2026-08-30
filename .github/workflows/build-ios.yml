@@ -14,13 +14,16 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '18'
+          node-version: '20'
 
-      - name: Install Capacitor & Sync
+      - name: Prepare Web Assets & Install Capacitor
         run: |
+          mkdir -p www
+          cp index.html www/ 2>/dev/null || true
+          cp -r * www/ 2>/dev/null || true
           npm init -y
           npm install @capacitor/core @capacitor/cli @capacitor/ios
-          npx cap init "MyWebApp" "com.mycompany.app" --web-dir .
+          npx cap init "MyWebApp" "com.mycompany.app" --web-dir www
           npx cap add ios
           npx cap sync ios
 
