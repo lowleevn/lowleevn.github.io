@@ -1,1 +1,41 @@
+name: Build iOS IPA
 
+on:
+  workflow_dispatch: # Cho phép bấm nút chạy thủ công trên điện thoại
+
+jobs:
+  build:
+    runs-on: macos-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Setup Node.js
+        uses: actions/checkout@v3
+        with:
+          node-python: '18'
+
+      - name: Install Capacitor & Build App
+        run: |
+          npm install @capacitor/core @capacitor/cli @capacitor/ios
+          npx cap init "MyWebApp" "com.mycompany.app" --web-dir .
+          npx cap add ios
+          npx cap sync ios
+
+      - name: Build Xcode Project
+        run: |
+          cd ios/App
+          xcodebuild -workspace App.xcworkspace -scheme App -sdk iphoneos -configuration Release archive -archivePath build/App.xcarchive CODE_SIGNING_ALLOWED=NO
+          
+      - name: Package IPA (Unsigned)
+        run: |
+          mkdir -p Payload
+          cp -r ios/App/build/App.xcarchive/Products/Applications/App.app Payload/
+          zip -r MyWebApp.ipa Payload/
+
+      - name: Upload IPA Artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: iOS-App-IPA
+          path: MyWebApp.ipa
