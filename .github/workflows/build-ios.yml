@@ -11,31 +11,79 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: '20'
+      - name: Install XcodeGen
+        run: brew install xcodegen
 
-      - name: Prepare Web Assets & Install Capacitor
+      - name: Generate Xcode Project & Source Files
         run: |
-          mkdir -p www
-          cp index.html www/ 2>/dev/null || true
-          cp -r * www/ 2>/dev/null || true
-          npm init -y
-          npm install @capacitor/core @capacitor/cli @capacitor/ios
-          npx cap init "MyWebApp" "com.mycompany.app" --web-dir www
-          npx cap add ios
-          npx cap sync ios
+          mkdir -p LowLeeApp
+          
+          # Tạo file cấu hình XcodeGen
+          cat << 'EOF' > LowLeeApp/project.yml
+          name: LowLeeApp
+          options:
+            bundleIdPrefix: com.lowlee
+            deploymentTarget:
+              iOS: 15.0
+          targets:
+            LowLeeApp:
+              type: application
+              platform: iOS
+              sources: [LowLeeApp]
+              settings:
+                GENERATE_INFOPLIST_FILE: YES
+                PRODUCT_BUNDLE_IDENTIFIER: com.lowlee.app
+                MARKETING_VERSION: "1.0"
+                CURRENT_PROJECT_VERSION: "1"
+          EOF
 
-      - name: Build Xcode Project
+          # Tạo file mã nguồn Swift (WebView)
+          cat << 'EOF' > LowLeeApp/LowLeeApp/AppDelegate.swift
+          import UIKit
+          import WebKit
+
+          @main
+          class AppDelegate: UIResponder, UIApplicationDelegate {
+              var window: UIWindow?
+
+              func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?) -> Bool {
+                  window = UIWindow(frame: UIScreen.main.bounds)
+                  let viewController = UIViewController()
+                  let webView = WKWebView(frame: viewController.view.bounds)
+                  webView.autoresizingMask = [.flexibleWidth, .flexibleHeight]
+                  
+                  if let url = URL(string: "https://lowleevn.github.io/") {
+                      webView.load(URLRequest(url: url))
+                  }
+                  
+                  viewController.view.addSubview(webView)
+                  window?.rootViewController = viewController
+                  window?.makeKeyAndVisible()
+                  return true
+              }
+          }
+          EOF
+
+          # Sinh file .xcodeproj
+          cd LowLeeApp
+          xcogen generate
+
+      - name: Build Xcode Archive
         run: |
-          cd ios/App
-          xcodebuild -workspace App.xcworkspace -scheme App -sdk iphoneos -configuration Release archive -archivePath build/App.xcarchive CODE_SIGNING_ALLOWED=NO
+          cd LowLeeApp
+          xcodebuild archive \
+            -project LowLeeApp.xcodeproj \
+            -scheme LowLeeApp \
+            -sdk iphoneos \
+            -configuration Release \
+            -archivePath build/LowLeeApp.xcarchive \
+            CODE_SIGNING_ALLOWED=NO \
+            CODE_SIGNING_REQUIRED=NO
 
       - name: Package IPA
         run: |
           mkdir -p Payload
-          cp -r ios/App/build/App.xcarchive/Products/Applications/App.app Payload/
+          cp -r LowLeeApp/build/LowLeeApp.xcarchive/Products/Applications/LowLeeApp.app Payload/
           zip -r MyWebApp.ipa Payload/
 
       - name: Upload IPA Artifact
