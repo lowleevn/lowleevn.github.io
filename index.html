@@ -6,7 +6,7 @@
     <title>404 - Không Tìm Thấy Trang | Luxury Experience</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;700&family=Plus+Jakarta+Sans:wght@300;400;600&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;700&family=Plus+Jakarta+Sans:wght@300;400;600&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
     <style>
         :root {
             --bg-color: #08080a;
@@ -35,7 +35,15 @@
             position: relative;
         }
 
-        /* Ambient Background Glow */
+        /* Ambient Glow & Grid */
+        .grid-overlay {
+            position: absolute;
+            inset: 0;
+            background-image: radial-gradient(rgba(255, 255, 255, 0.05) 1px, transparent 1px);
+            background-size: 32px 32px;
+            pointer-events: none;
+        }
+
         .ambient-glow {
             position: absolute;
             width: 600px;
@@ -48,14 +56,79 @@
             z-index: 0;
         }
 
-        /* Glassmorphism Card Container */
+        /* Top HUD Bar */
+        .hud-bar {
+            position: absolute;
+            top: 24px;
+            left: 32px;
+            right: 32px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            z-index: 10;
+            font-family: 'Space Mono', monospace;
+            font-size: 0.75rem;
+            color: var(--text-secondary);
+            letter-spacing: 1px;
+        }
+
+        .hud-metrics {
+            display: flex;
+            gap: 20px;
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            padding: 8px 18px;
+            border-radius: 50px;
+            backdrop-filter: blur(10px);
+        }
+
+        .hud-item span {
+            color: #e6af2e;
+            font-weight: 700;
+        }
+
+        /* Audio Player Control */
+        .audio-toggle {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            padding: 8px 18px;
+            border-radius: 50px;
+            color: var(--text-primary);
+            cursor: pointer;
+            backdrop-filter: blur(10px);
+            transition: all 0.3s ease;
+            user-select: none;
+        }
+
+        .audio-toggle:hover {
+            border-color: rgba(230, 175, 46, 0.4);
+        }
+
+        .audio-indicator {
+            width: 6px;
+            height: 6px;
+            background: #4cd137;
+            border-radius: 50%;
+            display: inline-block;
+            box-shadow: 0 0 8px #4cd137;
+        }
+
+        .audio-indicator.muted {
+            background: #e84118;
+            box-shadow: none;
+        }
+
+        /* Main Error Card */
         .error-card {
             position: relative;
             z-index: 1;
             background: var(--card-bg);
             border: 1px solid rgba(255, 255, 255, 0.08);
             border-radius: 24px;
-            padding: 60px 48px;
+            padding: 56px 48px;
             max-width: 580px;
             width: 90%;
             text-align: center;
@@ -63,26 +136,11 @@
             -webkit-backdrop-filter: blur(20px);
             box-shadow: 0 30px 60px rgba(0, 0, 0, 0.6),
                         inset 0 1px 0 rgba(255, 255, 255, 0.1);
-            transition: transform 0.3s ease, border-color 0.3s ease;
+            transition: transform 0.2s ease-out, border-color 0.3s ease;
         }
 
         .error-card:hover {
             border-color: rgba(230, 175, 46, 0.3);
-        }
-
-        /* Luxury 404 Typography */
-        .error-code {
-            font-family: 'Cinzel', serif;
-            font-size: clamp(6rem, 15vw, 9rem);
-            font-weight: 700;
-            line-height: 1;
-            letter-spacing: 6px;
-            background: var(--gold-gradient);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            margin-bottom: 12px;
-            filter: drop-shadow(0 10px 20px rgba(0,0,0,0.5));
-            user-select: none;
         }
 
         .error-tag {
@@ -94,28 +152,42 @@
             border: 1px solid rgba(212, 175, 55, 0.3);
             padding: 4px 14px;
             border-radius: 50px;
-            margin-bottom: 24px;
+            margin-bottom: 20px;
             background: rgba(212, 175, 55, 0.05);
+        }
+
+        .error-code {
+            font-family: 'Cinzel', serif;
+            font-size: clamp(5.5rem, 14vw, 8.5rem);
+            font-weight: 700;
+            line-height: 1;
+            letter-spacing: 6px;
+            background: var(--gold-gradient);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 12px;
+            filter: drop-shadow(0 10px 20px rgba(0,0,0,0.5));
+            user-select: none;
         }
 
         h1 {
             font-family: 'Cinzel', serif;
-            font-size: 1.6rem;
+            font-size: 1.5rem;
             font-weight: 500;
             letter-spacing: 1px;
-            margin-bottom: 16px;
+            margin-bottom: 14px;
             color: var(--text-primary);
         }
 
         p {
-            font-size: 0.95rem;
+            font-size: 0.92rem;
             color: var(--text-secondary);
             line-height: 1.7;
-            margin-bottom: 36px;
+            margin-bottom: 32px;
             font-weight: 300;
         }
 
-        /* Action Buttons */
+        /* Buttons */
         .actions {
             display: flex;
             gap: 16px;
@@ -127,8 +199,8 @@
             display: inline-flex;
             align-items: center;
             justify-content: center;
-            padding: 14px 28px;
-            font-size: 0.85rem;
+            padding: 13px 28px;
+            font-size: 0.8rem;
             font-weight: 600;
             letter-spacing: 1.5px;
             text-transform: uppercase;
@@ -162,17 +234,38 @@
             transform: translateY(-2px);
         }
 
-        /* Subtle Interactive Dot Matrix */
-        .grid-overlay {
-            position: absolute;
-            inset: 0;
-            background-image: radial-gradient(rgba(255, 255, 255, 0.05) 1px, transparent 1px);
-            background-size: 32px 32px;
-            pointer-events: none;
+        @media (max-width: 768px) {
+            .hud-bar {
+                flex-direction: column;
+                gap: 12px;
+                top: 16px;
+                left: 16px;
+                right: 16px;
+            }
+            .hud-metrics {
+                font-size: 0.65rem;
+                gap: 12px;
+            }
+            .error-card {
+                padding: 40px 24px;
+                margin-top: 60px;
+            }
         }
     </style>
 </head>
 <body>
+    <header class="hud-bar">
+        <div class="hud-metrics">
+            <div class="hud-item">FPS: <span id="fps-val">--</span></div>
+            <div class="hud-item">BATTERY: <span id="bat-val">--%</span></div>
+            <div class="hud-item">LOC: <span id="loc-val">DETECTING...</span></div>
+        </div>
+        <div class="audio-toggle" id="audioBtn">
+            <span class="audio-indicator" id="audioDot"></span>
+            <span id="audioText">SOUND ON</span>
+        </div>
+    </header>
+
     <div class="grid-overlay"></div>
     <div class="ambient-glow" id="glow"></div>
 
@@ -180,7 +273,7 @@
         <div class="error-tag">Không Gian Trống</div>
         <div class="error-code">404</div>
         <h1>Tuyệt Tác Chưa Được Định Vị</h1>
-        <p>Liên kết bạn yêu cầu có thể đã được chuyển dời hoặc không còn tồn tại trong kho lưu trữ độc bản này.</p>
+        <p>Liên kết bạn yêu cầu hiện không có sẵn trong hệ thống lưu trữ độc bản này.</p>
         
         <div class="actions">
             <a href="/" class="btn btn-primary">Trang Chủ</a>
@@ -188,8 +281,100 @@
         </div>
     </main>
 
+    <audio id="bgm" loop preload="auto">
+        <source src="https://cdn.pixabay.com/download/audio/2022/05/27/audio_1808fbf07a.mp3?filename=lofi-study-112191.mp3" type="audio/mpeg">
+    </audio>
+
     <script>
-        // Hiệu ứng tương tác ánh sáng theo con trỏ chuột
+        // 1. FPS Calculator
+        let frameCount = 0;
+        let lastTime = performance.now();
+        const fpsElement = document.getElementById('fps-val');
+
+        function calculateFPS(now) {
+            frameCount++;
+            if (now - lastTime >= 1000) {
+                const currentFPS = Math.round((frameCount * 1000) / (now - lastTime));
+                fpsElement.textContent = currentFPS;
+                frameCount = 0;
+                lastTime = now;
+            }
+            requestAnimationFrame(calculateFPS);
+        }
+        requestAnimationFrame(calculateFPS);
+
+        // 2. Battery API
+        const batElement = document.getElementById('bat-val');
+        if ('getBattery' in navigator) {
+            navigator.getBattery().then(battery => {
+                function updateBattery() {
+                    const level = Math.round(battery.level * 100);
+                    batElement.textContent = `${level}%${battery.charging ? ' ⚡' : ''}`;
+                }
+                updateBattery();
+                battery.addEventListener('levelchange', updateBattery);
+                battery.addEventListener('chargingchange', updateBattery);
+            });
+        } else {
+            batElement.textContent = 'N/A';
+        }
+
+        // 3. Location Detection (via IP-API)
+        const locElement = document.getElementById('loc-val');
+        fetch('https://ipapi.co/json/')
+            .then(res => res.json())
+            .then(data => {
+                if (data.city && data.country_code) {
+                    locElement.textContent = `${data.city.toUpperCase()}, ${data.country_code}`;
+                } else {
+                    locElement.textContent = 'RESTRICTED';
+                }
+            })
+            .catch(() => {
+                locElement.textContent = 'ANONYMOUS';
+            });
+
+        // 4. Background Audio Control & Autoplay Bypass
+        const audio = document.getElementById('bgm');
+        const audioBtn = document.getElementById('audioBtn');
+        const audioDot = document.getElementById('audioDot');
+        const audioText = document.getElementById('audioText');
+        let isPlaying = false;
+
+        function startAudio() {
+            audio.volume = 0.4;
+            audio.play().then(() => {
+                isPlaying = true;
+                audioDot.classList.remove('muted');
+                audioText.textContent = 'SOUND ON';
+            }).catch(() => {
+                isPlaying = false;
+                audioDot.classList.add('muted');
+                audioText.textContent = 'SOUND OFF';
+            });
+        }
+
+        // Trình duyệt chặn autoplay có âm thanh, kích hoạt khi người dùng tương tác đầu tiên
+        window.addEventListener('click', () => {
+            if (!isPlaying && audio.paused) startAudio();
+        }, { once: true });
+
+        audioBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            if (audio.paused) {
+                audio.play();
+                isPlaying = true;
+                audioDot.classList.remove('muted');
+                audioText.textContent = 'SOUND ON';
+            } else {
+                audio.pause();
+                isPlaying = false;
+                audioDot.classList.add('muted');
+                audioText.textContent = 'SOUND OFF';
+            }
+        });
+
+        // 5. Interactive Mouse Glow & Tilt
         const glow = document.getElementById('glow');
         const card = document.getElementById('card');
 
@@ -198,9 +383,8 @@
             glow.style.left = `${clientX}px`;
             glow.style.top = `${clientY}px`;
             
-            // Hiệu ứng nghiêng nhẹ thẻ 3D
-            const xAxis = (window.innerWidth / 2 - clientX) / 45;
-            const yAxis = (window.innerHeight / 2 - clientY) / 45;
+            const xAxis = (window.innerWidth / 2 - clientX) / 50;
+            const yAxis = (window.innerHeight / 2 - clientY) / 50;
             card.style.transform = `rotateY(${xAxis}deg) rotateX(${yAxis}deg)`;
         });
     </script>
