@@ -1,3 +1,4 @@
+
 name: Build iOS IPA
 
 on:
@@ -11,23 +12,53 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Install XcodeGen
-        run: brew install xcodegen
-
-      - name: Generate Xcode Project & Source Files
+      - name: Build Swift Executable & Package IPA
         run: |
-          mkdir -p LowLeeApp/LowLeeApp
+          mkdir -p Payload/LowLeeApp.app
           
-          # 1. Tạo file Info.plist chuẩn iOS
-          cat << 'EOF' > LowLeeApp/LowLeeApp/Info.plist
+          # 1. Tạo file ViewController Swift bọc web
+          cat << 'EOF' > ViewController.swift
+          import UIKit
+          import WebKit
+
+          class ViewController: UIViewController {
+              override func viewDidLoad() {
+                  super.viewDidLoad()
+                  let webView = WKWebView(frame: self.view.bounds)
+                  webView.autoresizingMask = [.flexibleWidth, .flexibleHeight]
+                  if let url = URL(string: "https://lowleevn.github.io/") {
+                      webView.load(URLRequest(url: url))
+                  }
+                  self.view.addSubview(webView)
+              }
+          }
+
+          @main
+          class AppDelegate: UIResponder, UIApplicationDelegate {
+              var window: UIWindow?
+              func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?) -> Bool {
+                  window = UIWindow(frame: UIScreen.main.bounds)
+                  let vc = ViewController()
+                  window?.rootViewController = vc
+                  window?.makeKeyAndVisible()
+                  return true
+              }
+          }
+          EOF
+
+          # 2. Biên dịch trực tiếp file Swift thành file thực thi iOS
+          xcrun -sdk iphoneos swiftc ViewController.swift -o Payload/LowLeeApp.app/LowLeeApp -target arm64-apple-ios15.0
+
+          # 3. Tạo Info.plist
+          cat << 'EOF' > Payload/LowLeeApp.app/Info.plist
           <?xml version="1.0" encoding="UTF-8"?>
           <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
           <plist version="1.0">
           <dict>
               <key>CFBundleExecutable</key>
-              <string>$(EXECUTABLE_NAME)</string>
+              <string>LowLeeApp</string>
               <key>CFBundleIdentifier</key>
-              <string>$(PRODUCT_BUNDLE_IDENTIFIER)</string>
+              <string>com.lowlee.app</string>
               <key>CFBundleName</key>
               <string>LowLeeApp</string>
               <key>CFBundlePackageType</key>
@@ -38,82 +69,13 @@ jobs:
               <string>1</string>
               <key>LSRequiresIPhoneOS</key>
               <true/>
-              <key>NSAppTransportSecurity</key>
-              <dict>
-                  <key>NSAllowsArbitraryLoads</key>
-                  <true/>
-              </dict>
           </dict>
-          </plist>
           EOF
 
-          # 2. Tạo file mã nguồn Swift
-          cat << 'EOF' > LowLeeApp/LowLeeApp/AppDelegate.swift
-          import UIKit
-          import WebKit
-
-          @main
-          class AppDelegate: UIResponder, UIApplicationDelegate {
-              var window: UIWindow?
-
-              func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?) -> Bool {
-                  window = UIWindow(frame: UIScreen.main.bounds)
-                  let viewController = UIViewController()
-                  let webView = WKWebView(frame: viewController.view.bounds)
-                  webView.autoresizingMask = [.flexibleWidth, .flexibleHeight]
-                  
-                  if let url = URL(string: "https://lowleevn.github.io/") {
-                      webView.load(URLRequest(url: url))
-                  }
-                  
-                  viewController.view.addSubview(webView)
-                  window?.rootViewController = viewController
-                  window?.makeKeyAndVisible()
-                  return true
-              }
-          }
-          EOF
-
-          # 3. Tạo cấu hình project.yml
-          cat << 'EOF' > LowLeeApp/project.yml
-          name: LowLeeApp
-          options:
-            bundleIdPrefix: com.lowlee
-            deploymentTarget:
-              iOS: 15.0
-          targets:
-            LowLeeApp:
-              type: application
-              platform: iOS
-              sources: [LowLeeApp]
-              settings:
-                PRODUCT_BUNDLE_IDENTIFIER: com.lowlee.app
-                INFOPLIST_FILE: LowLeeApp/Info.plist
-          EOF
-
-          # 4. Sinh dự án Xcode
-          cd LowLeeApp
-          xcogen generate
-
-      - name: Build Xcode Archive
-        run: |
-          cd LowLeeApp
-          xcodebuild archive \
-            -project LowLeeApp.xcodeproj \
-            -scheme LowLeeApp \
-            -sdk iphoneos \
-            -configuration Release \
-            -archivePath build/LowLeeApp.xcarchive \
-            CODE_SIGNING_ALLOWED=NO \
-            CODE_SIGNING_REQUIRED=NO
-
-      - name: Package IPA
-        run: |
-          mkdir -p Payload
-          cp -r LowLeeApp/build/LowLeeApp.xcarchive/Products/Applications/LowLeeApp.app Payload/
+          # 4. Nén thành file .ipa
           zip -r MyWebApp.ipa Payload/
 
-      - name: Upload IPA Artifact
+      - name: Upload IPA
         uses: actions/upload-artifact@v4
         with:
           name: iOS-App-IPA
